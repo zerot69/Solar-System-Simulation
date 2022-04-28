@@ -8,8 +8,8 @@ import pygame
 import math
 
 pygame.init()
-WIDTH, HEIGHT = 1920, 1080
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+WIDTH, HEIGHT = pygame.display.Info().current_w, pygame.display.Info().current_h
+WINDOW = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 COLOR_WHITE = (255, 255, 255)
 COLOR_UNIVERSE = (36, 36, 36)
 COLOR_SUN = (252, 150, 1)
@@ -44,7 +44,7 @@ class Planet:
         self.x_vel = 0
         self.y_vel = 0
 
-    def draw(self, window, show):
+    def draw(self, window, show, move_x, move_y):
         x = self.x * self.SCALE + WIDTH / 2
         y = self.y * self.SCALE + HEIGHT / 2
         if len(self.orbit) > 2:
@@ -53,14 +53,15 @@ class Planet:
                 x, y = point
                 x = x * self.SCALE + WIDTH / 2
                 y = y * self.SCALE + HEIGHT / 2
-                updated_points.append((x, y))
+                updated_points.append((x + move_x, y + move_y))
             pygame.draw.lines(window, self.color, False, updated_points, 1)
-        pygame.draw.circle(window, self.color, (x, y), self.radius)
+        pygame.draw.circle(window, self.color, (x + move_x, y + move_y), self.radius)
         if not self.sun:
             distance_text = FONT_2.render(f"{round(self.distance_to_sun * 1.057 * 10 ** -16, 8)} light years", True,
                                           COLOR_WHITE)
             if show:
-                window.blit(distance_text, (x - distance_text.get_width() / 2, y - distance_text.get_height() / 2 - 25))
+                window.blit(distance_text, (x - distance_text.get_width() / 2 + move_x,
+                                            y - distance_text.get_height() / 2 - 20 + move_y))
 
     def attraction(self, other):
         other_x, other_y = other.x, other.y
@@ -90,7 +91,7 @@ class Planet:
         self.orbit.append((self.x, self.y))
 
     def update_scale(self, scale):
-        self.radius = self.radius * scale
+        self.radius *= scale
 
 
 def main():
@@ -98,17 +99,19 @@ def main():
     pause = False
     show_distance = False
     clock = pygame.time.Clock()
+    move_x = 0
+    move_y = 0
 
     # Metric from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/
 
     sun = Planet(0, 0, 30 * Planet.SCALE * 10 ** 9, COLOR_SUN, 1.98892 * 10 ** 30)
     sun.sun = True
 
-    mercury = Planet(0.387 * Planet.AU, 0, 5 * Planet.SCALE * 10 ** 9, COLOR_MERCURY, 3.30 * 10 ** 23)
-    mercury.y_vel = -47.4 * 1000
+    mercury = Planet(-0.387 * Planet.AU, 0, 5 * Planet.SCALE * 10 ** 9, COLOR_MERCURY, 3.30 * 10 ** 23)
+    mercury.y_vel = 47.4 * 1000
 
-    venus = Planet(0.723 * Planet.AU, 0, 9 * Planet.SCALE * 10 ** 9, COLOR_VENUS, 4.8685 * 10 ** 24)
-    venus.y_vel = -35.02 * 1000
+    venus = Planet(-0.723 * Planet.AU, 0, 9 * Planet.SCALE * 10 ** 9, COLOR_VENUS, 4.8685 * 10 ** 24)
+    venus.y_vel = 35.02 * 1000
 
     earth = Planet(-1 * Planet.AU, 0, 10 * Planet.SCALE * 10 ** 9, COLOR_EARTH, 5.9722 * 10 ** 24)
     earth.y_vel = 29.783 * 1000
@@ -128,39 +131,11 @@ def main():
     neptune = Planet(-30.178 * Planet.AU, 0, 12 * Planet.SCALE * 10 ** 9, COLOR_NEPTUNE, 1.024 * 10 ** 26)
     neptune.y_vel = 5.43 * 1000
 
-    planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune]
+    planets = [neptune, uranus, saturn, jupiter, mars, earth, venus, mercury, sun]
 
     while run:
         clock.tick(60)
         WINDOW.fill(COLOR_UNIVERSE)
-        fps_text = FONT_1.render("FPS: " + str(int(clock.get_fps())), True, COLOR_WHITE)
-        WINDOW.blit(fps_text, (200, 120))
-        text_surface = FONT_1.render("Press X or ESC to exit", True, COLOR_WHITE)
-        WINDOW.blit(text_surface, (200, 150))
-        text_surface = FONT_1.render("Press D to turn on/off distance", True, COLOR_WHITE)
-        WINDOW.blit(text_surface, (200, 180))
-        text_surface = FONT_1.render("Press Space to pause/unpause", True, COLOR_WHITE)
-        WINDOW.blit(text_surface, (200, 210))
-        text_surface = FONT_1.render("Use scroll-wheel to zoom", True, COLOR_WHITE)
-        WINDOW.blit(text_surface, (200, 240))
-        sun_surface = FONT_1.render("- Sun", True, COLOR_SUN)
-        WINDOW.blit(sun_surface, (200, 300))
-        mercury_surface = FONT_1.render("- Mercury", True, COLOR_MERCURY)
-        WINDOW.blit(mercury_surface, (200, 330))
-        venus_surface = FONT_1.render("- Venus", True, COLOR_VENUS)
-        WINDOW.blit(venus_surface, (200, 360))
-        earth_surface = FONT_1.render("- Earth", True, COLOR_EARTH)
-        WINDOW.blit(earth_surface, (200, 390))
-        mars_surface = FONT_1.render("- Mars", True, COLOR_MARS)
-        WINDOW.blit(mars_surface, (200, 420))
-        jupiter_surface = FONT_1.render("- Jupiter", True, COLOR_JUPITER)
-        WINDOW.blit(jupiter_surface, (200, 450))
-        saturn_surface = FONT_1.render("- Saturn", True, COLOR_SATURN)
-        WINDOW.blit(saturn_surface, (200, 480))
-        uranus_surface = FONT_1.render("- Uranus", True, COLOR_URANUS)
-        WINDOW.blit(uranus_surface, (200, 510))
-        neptune_surface = FONT_1.render("- Neptune", True, COLOR_NEPTUNE)
-        WINDOW.blit(neptune_surface, (200, 540))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and
@@ -170,22 +145,70 @@ def main():
                 pause = not pause
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
                 show_distance = not show_distance
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+                move_x = move_y = 0
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 5:
-                Planet.SCALE = Planet.SCALE * 0.75
+                Planet.SCALE *= 0.75
                 for planet in planets:
                     planet.update_scale(0.75)
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 4:
-                Planet.SCALE = Planet.SCALE * 1.25
+                Planet.SCALE *= 1.25
                 for planet in planets:
                     planet.update_scale(1.25)
+
+        keys = pygame.key.get_pressed()
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        window_w, window_h = pygame.display.get_surface().get_size()
+        distance = 10
+        if keys[pygame.K_LEFT] or mouse_x == 0:
+            move_x += distance
+        if keys[pygame.K_RIGHT] or mouse_x == window_w - 1:
+            move_x -= distance
+        if keys[pygame.K_UP] or mouse_y == 0:
+            move_y += distance
+        if keys[pygame.K_DOWN] or mouse_y == window_h - 1:
+            move_y -= distance
 
         for planet in planets:
             if not pause:
                 planet.update_position(planets)
             if show_distance:
-                planet.draw(WINDOW, 1)
+                planet.draw(WINDOW, 1, move_x, move_y)
             else:
-                planet.draw(WINDOW, 0)
+                planet.draw(WINDOW, 0, move_x, move_y)
+
+        fps_text = FONT_1.render("FPS: " + str(int(clock.get_fps())), True, COLOR_WHITE)
+        WINDOW.blit(fps_text, (15, 15))
+        text_surface = FONT_1.render("Press X or ESC to exit", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 45))
+        text_surface = FONT_1.render("Press D to turn on/off distance", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 75))
+        text_surface = FONT_1.render("Use mouse or arrow keys to move around", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 105))
+        text_surface = FONT_1.render("Press C to center", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 135))
+        text_surface = FONT_1.render("Press Space to pause/unpause", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 165))
+        text_surface = FONT_1.render("Use scroll-wheel to zoom", True, COLOR_WHITE)
+        WINDOW.blit(text_surface, (15, 195))
+        sun_surface = FONT_1.render("- Sun", True, COLOR_SUN)
+        WINDOW.blit(sun_surface, (15, 255))
+        mercury_surface = FONT_1.render("- Mercury", True, COLOR_MERCURY)
+        WINDOW.blit(mercury_surface, (15, 285))
+        venus_surface = FONT_1.render("- Venus", True, COLOR_VENUS)
+        WINDOW.blit(venus_surface, (15, 315))
+        earth_surface = FONT_1.render("- Earth", True, COLOR_EARTH)
+        WINDOW.blit(earth_surface, (15, 345))
+        mars_surface = FONT_1.render("- Mars", True, COLOR_MARS)
+        WINDOW.blit(mars_surface, (15, 375))
+        jupiter_surface = FONT_1.render("- Jupiter", True, COLOR_JUPITER)
+        WINDOW.blit(jupiter_surface, (15, 405))
+        saturn_surface = FONT_1.render("- Saturn", True, COLOR_SATURN)
+        WINDOW.blit(saturn_surface, (15, 435))
+        uranus_surface = FONT_1.render("- Uranus", True, COLOR_URANUS)
+        WINDOW.blit(uranus_surface, (15, 465))
+        neptune_surface = FONT_1.render("- Neptune", True, COLOR_NEPTUNE)
+        WINDOW.blit(neptune_surface, (15, 495))
 
         pygame.display.update()
 
