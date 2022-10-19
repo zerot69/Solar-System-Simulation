@@ -2,7 +2,7 @@
 Solar System Simulation in Python using Pygame.\
 Inspired by [@techwithtim](https://github.com/techwithtim)'s [Youtube video](https://youtu.be/WTLPmUHTPqo).
 
-![Solar System Simulation in Python using Pygame](https://cdn.discordapp.com/attachments/756411079156039780/969621990208053319/unknown.png)
+![Solar System Simulation in Python using Pygame](https://i.imgur.com/LhB0Qf7.png)
 
 ## Setup:
 - Require pygame package installed. Go to [pygame official website](https://www.pygame.org/wiki/GettingStarted) for more information on pygame installation.
